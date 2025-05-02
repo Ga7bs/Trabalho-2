@@ -1,10 +1,38 @@
-# Para executar:
+OBS: ANTES DA EXECUÇÃO 
+1. Instalar a biblioteca 'plyer'
+pip install plyer
+ou Instalar o plyer usando o python -m pip: python -m pip install plyer
+
+%% Se o módulo plyer ainda estiver dando erro faça estes passos:
+% Abra a paleta de comandos (Command Palette) no VSCode Windows/Linux: Ctrl+Shift+P
+% Pesquise e selecione: Python: Select Interpreter
+% Escolha o ambiente Python em que você instalou o plyer (por exemplo, venv, conda ou o global Python).
+% Verifique a instalação do plyer no ambiente correto : python -m pip show plyer 
+
+2. Criar e ativar um ambiente virtual
+Criar python -m venv venv
+Ativar no windows é .\venv\Scripts\activate
+
+Instale o plyer dentro do ambiente virtual: pip install plyer
+
+# Para executar o servidor Uvicorn e o FastAPI:
 -> Instalar as dependências:
 pip install fastapi uvicorn plyer
+
+%% Se aparecer "ERROR: Error loading ASGI app. Could not import module "Prototipo_1". faça estes passos:
+1. Caminho Correto: Certifique-se de que está executando o comando na raiz do projeto, onde Protipo_1.py Teste.py estão localizados.
+2. Ambiente Virtual: Se você estiver usando um ambiente virtual, assegure-se de que ele esteja ativado. Você deve ver (venv) ou algo semelhante
+no seu terminal. Se não estiver ativo, ative-o para garantir que todas as bibliotecas estejam acessíveis: .\venv\Scripts\activate
+
+Para iniciar o seu servidor Uvicorn a partir do arquivo modelos.py, use o comando: uvicorn modelos:app --reload
 
 -> Executar a API
 uvicorn nome_do_arquivo:app --reload
 Neste caso é uvicorn Teste:app --reload
+
+app: Este é o nome da variável que representa a aplicação FastAPI dentro do arquivo Teste.py.
+--reload: Isso ativa o modo de recarregamento automático, o que significa que sempre que você fizer mudanças no seu código, o servidor será 
+reiniciado automaticamente.
 
 # Análise de Complexidade:
 📊 Complexidade e Escalabilidade
@@ -16,4 +44,20 @@ Lista Desordenada	 Inserção: O(1), Remoção: O(n)
 
 Obs: Com heapq, o sistema continua eficiente mesmo com milhares de chamados. A heap mantém a fila ordenada por prioridade e timestamp sem 
 precisar reordenar todos os elementos a cada inserção.
+
+
+    GET: Para recuperar informações.
+    POST: Para criar um novo registro.
+    PUT: Para atualizar um registro existente.
+    DELETE: Para deletar um registro existente.
+
+# No arquivo Teste.py
+Para o GET na Raiz: 
+Endereço da Requisição: GET http://127.0.0.1:8000/
+
+Para Adicionar Itens com POST:
+Endereço da Requisição: POST http://127.0.0.1:8000/itens/
+
+Deve usar o GET em http://127.0.0.1:8000/ para acessar a rota que você definiu como @app.get("/").
+Deve usar o POST em http://127.0.0.1:8000/itens/ para chamar a rota definida como @app.post("/itens/").
 
