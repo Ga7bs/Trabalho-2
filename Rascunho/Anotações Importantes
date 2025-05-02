@@ -1,0 +1,19 @@
+# Para executar:
+-> Instalar as dependências:
+pip install fastapi uvicorn plyer
+
+-> Executar a API
+uvicorn nome_do_arquivo:app --reload
+Neste caso é uvicorn Teste:app --reload
+
+# Análise de Complexidade:
+📊 Complexidade e Escalabilidade
+Operação	          Complexidade
+Inserção (heapq)	    O(log n)
+Remoção (heapq)	      O(log n)
+Lista Ordenada 	   Inserção: O(n), Remoção: O(1)
+Lista Desordenada	 Inserção: O(1), Remoção: O(n)
+
+Obs: Com heapq, o sistema continua eficiente mesmo com milhares de chamados. A heap mantém a fila ordenada por prioridade e timestamp sem 
+precisar reordenar todos os elementos a cada inserção.
+
