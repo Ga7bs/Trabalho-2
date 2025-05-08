@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 # --- CONSTANTES ---
 NOTIFICAR_CHAMADOS_CRITICOS = True
-TEMPO_VERIFICACAO_ATENDIMENTO = 5  # segundos
+TEMPO_VERIFICACAO_ATENDIMENTO = 10  # segundos
 LIMITE_DESCRICAO_NOTIFICACAO = 50  # caracteres
 
-# --- PRIORIDADES (menor valor = maior prioridade) ---
+# --- PRIORIDADES ---
 PRIORIDADE_CHAMADO = {
     'Server down': 1,
     'Impacta produção': 2,
@@ -37,7 +37,7 @@ PRIORIDADE_CLIENTE = {
     'Demonstração': 3
 }
 
-# --- TEMPO MÉDIO DE RESOLUÇÃO (minutos) ---
+# --- TEMPO MÉDIO DE RESOLUÇÃO ---
 TEMPO_RESOLUCAO = {
     'Server down': 120,
     'Impacta produção': 60,
@@ -117,6 +117,7 @@ class SistemaChamados:
             prioridade = self._calcular_prioridade_combinada(chamado)
             
             with self._lock:
+                # Mantém o novo chamado na fila
                 heapq.heappush(self._fila, (prioridade, chamado.timestamp, chamado))
                 self._contador += 1
                 self._id_map[chamado.id_chamado] = chamado
@@ -159,11 +160,14 @@ class SistemaChamados:
         with self._lock:
             if id_chamado not in self._id_map or agente_id not in AGENTES:
                 return False
-                
+            
             chamado = self._id_map[id_chamado]
             chamado.agente = agente_id
             chamado.status = StatusChamado.EM_ATENDIMENTO
+            
+            # Mover o chamado para atendimentos em andamento
             self._chamados_em_atendimento[id_chamado] = chamado
+            
             self._notificar_mudanca_fila()
             logger.info(f"Chamado {id_chamado} atribuído a {AGENTES[agente_id]}")
             return True
@@ -173,8 +177,14 @@ class SistemaChamados:
         with self._lock:
             if not self._fila:
                 return None
-                
+
             prioridade, timestamp, chamado = heapq.heappop(self._fila)
+            chamado.status = StatusChamado.EM_ATENDIMENTO
+            
+            # Armazena o chamado em atendimento
+            self._chamados_em_atendimento[chamado.id_chamado] = chamado
+            
+            # Remove do índice principal
             self._id_map.pop(chamado.id_chamado, None)
             self._notificar_mudanca_fila()
 
@@ -182,9 +192,6 @@ class SistemaChamados:
 
         if NOTIFICAR_CHAMADOS_CRITICOS and prioridade[0] <= 2:
             self._notificar_chamado_critico(chamado)
-        
-        # Adiciona o chamado à lista de atendimentos
-        self._chamados_em_atendimento[chamado.id_chamado] = chamado
 
         return chamado
 
@@ -293,10 +300,10 @@ def handle_connect():
 
 # --- PROCESSAMENTO AUTOMÁTICO ---
 def processar_chamados_continuamente():
-    """Processa chamados automaticamente."""
+    """Processa chamados a cada 5 segundos, se houver chamados na fila."""
     while True:
-        sistema.processar_proximo_chamado()
         time.sleep(TEMPO_VERIFICACAO_ATENDIMENTO)
+        sistema.processar_proximo_chamado()  # Processa o próximo chamado na fila
 
 # --- INICIALIZAÇÃO ---
 def iniciar_sistema():
