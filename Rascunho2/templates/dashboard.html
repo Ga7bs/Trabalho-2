@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Suporte</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        form {
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dashboard de Chamados</h1>
+
+    <h2>Adicionar Chamado</h2>
+    <form id="chamado-form">
+        <input type="text" id="cliente-nome" placeholder="Nome do Cliente" required>
+        <select id="tipo-cliente" required>
+            <option value="" disabled selected>Tipo de Cliente</option>
+            <option value="Prioritário">Prioritário</option>
+            <option value="Sem prioridade">Sem prioridade</option>
+            <option value="Demonstração">Demonstração</option>
+        </select>
+        <select id="tipo-chamado" required>
+            <option value="" disabled selected>Tipo de Chamado</option>
+            <option value="Server down">Server down</option>
+            <option value="Impacta produção">Impacta produção</option>
+            <option value="Sem impacto">Sem impacto</option>
+            <option value="Dúvida">Dúvida</option>
+        </select>
+        <textarea id="descricao" placeholder="Descrição do problema" required></textarea>
+        <button type="submit">Adicionar Chamado</button>
+    </form>
+
+    <h2>Fila de Chamados</h2>
+    <table id="fila">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Prioridade</th>
+                <th>Tempo Estimado</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <h2>Chamados em Atendimento</h2>
+    <table id="em_atendimento">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Agente</th>
+                <th>Tempo Estimado</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        var socket = io();
+
+        // Escuta eventos para atualizar a fila e os atendimentos
+        socket.on('atualizar_fila', function(data) {
+            // Atualiza a tabela de fila
+            var filaBody = document.getElementById('fila').getElementsByTagName('tbody')[0];
+            filaBody.innerHTML = ''; // Limpa o conteúdo existente
+
+            data.fila.forEach(function(chamado) {
+                var row = filaBody.insertRow();
+                row.insertCell(0).innerText = chamado.id;
+                row.insertCell(1).innerText = chamado.cliente;
+                row.insertCell(2).innerText = chamado.tipo;
+                row.insertCell(3).innerText = chamado.prioridade;
+                row.insertCell(4).innerText = chamado.tempo_estimado;
+            });
+
+            // Atualiza a tabela de chamados em atendimento
+            var atdBody = document.getElementById('em_atendimento').getElementsByTagName('tbody')[0];
+            atdBody.innerHTML = ''; // Limpa o conteúdo existente
+
+            data.em_atendimento.forEach(function(atend) {
+                var row = atdBody.insertRow();
+                row.insertCell(0).innerText = atend.id;
+                row.insertCell(1).innerText = atend.agente;
+                row.insertCell(2).innerText = atend.tempo_estimado;
+            });
+        });
+
+        // Evento para enviar dados do formulário
+        document.getElementById('chamado-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Previna o envio padrão do formulário
+
+            // Coleta dados do formulário
+            const clienteNome = document.getElementById('cliente-nome').value;
+            const tipoCliente = document.getElementById('tipo-cliente').value;
+            const tipoChamado = document.getElementById('tipo-chamado').value;
+            const descricao = document.getElementById('descricao').value;
+
+            // Envia dados para o servidor
+            fetch('/chamado', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cliente_nome: clienteNome,
+                    tipo_cliente: tipoCliente,
+                    tipo_chamado: tipoChamado,
+                    descricao: descricao
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Limpa o formulário após o envio
+                    document.getElementById('chamado-form').reset();
+                } else {
+                    alert(data.message);  // Mostra erro se ocorrer
+                }
+            })
+            .catch((error) => {
+                console.error('Erro:', error);
+            });
+        });
+    </script>
+</body>
+
+</html>
