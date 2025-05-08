@@ -1,0 +1,33 @@
+## Instalação de dependência:
+pip install flask flask-socketio plyer
+
+Para executar o sistema: python Suporte_tecnico.py (Verifica se está a execução está no mesmo diretório do arquivo Rascunho2)
+Acessar a interface web: http://localhost:5000
+
+## dashboard.html está dentro de templates
+
+Complexidade das Operações Principais
+
+adicionar_chamado()  O(log n)  
+heapq.heappush mantém a heap em ordem parcial, com inserção em O(log n).
+processar_proximo_chamado()  O(log n) 
+heapq.heappop remove o menor elemento e reorganiza a heap em O(log n). 
+tamanho() (consulta) O(1) Apenas retorna len(fila) 
+
+Heap (Priority Queue) O(log n) Melhor para filas dinâmicas. Mantém ordenação eficiente. 
+Lista Ordenada O(n) | O(1)* Inserção lenta (reordenar lista). Remoção rápida apenas se for FIFO. 
+Lista Não Ordenada | O(1) | O(n) | Inserção rápida, mas remoção ineficiente (busca linear).
+
+* (Se a remoção for sempre do primeiro elemento, pode ser O(1), mas a inserção ainda é O(n) devido à ordenação.)
+
+Escalabilidade do Sistema:
+
+    -> Volume Baixo (10-100 chamados):
+        Heap é eficiente, com operações em O(log n) ≈ 2-7 passos.
+    -> Volume Médio (1.000-10.000 chamados):
+        Continua eficiente (O(log 10.000) ≈ 13 passos).
+    -> Volume Alto (100.000+ chamados):
+        Ainda viável, mas pode exigir otimizações adicionais (ex: particionamento por prioridade).
+
+1. Notificação: O código de notificação do desktop foi mantido. Se um chamado for crítico (Server down ou Impacta produção), o sistema enviará
+uma notificação.
