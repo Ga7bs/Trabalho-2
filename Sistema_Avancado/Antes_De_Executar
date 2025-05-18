@@ -1,0 +1,30 @@
+Dependências:
+pip install flask flask-sse flask-socketio plyer redis
+pip install flask flask-socketio flask-sse plyer
+
+Executar: 
+python Sistema_Chamadas.py
+
+Acesse o dashboard em:
+http://localhost:5000
+-------------------------------------------------------------------------------------------------------------------------------------------
+Análise de Complexidade e Escalabilidade:
+
+1. Operações Principais:
+        adicionar_chamado(): O(log ⁡n) (devido ao heapq.heappush)
+        processar_proximo_chamado(): O(log⁡ n) (devido ao heapq.heappop)
+
+2. Comparação com Alternativas:
+        Lista não ordenada:
+            Inserção: O(1)
+            Remoção: O(n) (necessário buscar o item mais prioritário)
+        Lista ordenada:
+            Inserção: O(n) (manter ordenação)
+            Remoção: O(1) (sempre remover o primeiro)
+
+Notificações são disparadas automaticamente para:
+    'Server down' (prioridade 1)
+    'Impacta produção' (prioridade 2)
+-------------------------------------------------------------------------------------------------------------------------------------------
+dashboard.js  # Controle da interface
+
