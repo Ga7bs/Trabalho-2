@@ -26,5 +26,55 @@ Notificações são disparadas automaticamente para:
     'Server down' (prioridade 1)
     'Impacta produção' (prioridade 2)
 -------------------------------------------------------------------------------------------------------------------------------------------
-dashboard.js  # Controle da interface
+dashboard.js  # Controle da interface, tem a função essencial de controlar a interface do usuário em tempo real no sistema de chamados.
+O arquivo é essencial para transformar dados brutos do servidor em uma experiência interativa, mantendo a consistência entre todos os clientes
+conectados.
 
+Funções Principais do dashboard.js:
+
+    1. Conexão WebSocket
+        Estabelece comunicação bidirecional com o servidor para atualizações instantâneas:
+
+    const socket = io(); // Conecta ao Socket.IO
+
+    2. Atualização Dinâmica da Interface
+        Recebe dados do servidor e atualiza:
+        Lista de chamados em andamento
+        Status dos agentes
+        Fila de espera
+
+    socket.on('atualizar_dados', (data) => {
+        // Atualiza a UI com os novos dados
+    });
+
+    3. Manipulação de Eventos
+        Envia ações do usuário para o servidor:
+
+    function finalizarChamado(id) {
+        socket.emit('finalizar_chamado', { id_chamado: id });
+    }
+
+    4. Renderização Visual
+        Cria elementos HTML dinamicamente baseados nos dados recebidos:
+
+    data.chamados_em_atendimento.forEach(chamado => {
+        const div = document.createElement('div');
+        div.innerHTML = `...template do chamado...`;
+        container.appendChild(div);
+    });
+
+Fluxo Completo:
+
+    Quando um chamado é finalizado:
+        O front-end envia um evento via WebSocket (finalizar_chamado)
+        O servidor processa e atualiza os dados
+        O dashboard.js recebe a atualização (atualizar_dados)
+        A interface é redesenhada sem refresh
+
+    Dados que ele manipula:
+
+    {
+        chamados_em_atendimento: [...],
+        agentes: [...],
+        fila: [...]
+    }
