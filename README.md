@@ -1,18 +1,23 @@
  --- Como executar o projeto ---
 
-Dependências: 
+-- Dependências -- 
 
 Instale as dependências necessárias com o pip:
-pip install flask flask-sse flask-socketio plyer redis
+
+  pip install flask flask-sse flask-socketio plyer redis
 
 Caso o Redis não seja necessário para sua execução local, você pode usar:
-pip install flask flask-socketio flask-sse plyer
 
-Executando a aplicação
+  pip install flask flask-socketio flask-sse plyer
 
-Execute o script principal:
-python Sistema_Chamadas.py
+ -- Executando a aplicação --
 
-Acessando o Dashboard
+ -- Execute o script principal --
+  
+  python Sistema_Chamadas.py
+
+ -- Acessando o Dashboard --
+
 Abra seu navegador e acesse:
+
 http://localhost:5000
