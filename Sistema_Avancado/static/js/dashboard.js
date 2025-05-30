@@ -19,15 +19,30 @@ function initDashboard() {
          // Limpa o conteúdo atual da fila antes de inserir os novos dados.
 
         data.fila.forEach(chamado => {
+            // Percorre cada objeto 'chamado' presente no array 'fila' enviado pelo servidor.
+            
             const div = document.createElement('div');
+             // Cria dinamicamente um elemento <div> para representar o chamado.
+            
             div.className = `chamado prioridade-${chamado.prioridade[0]}`;
+            // Define a classe CSS do chamado.
+            // A classe inclui a prioridade (ex.: 'prioridade-A'), útil para estilizar visualmente.
+            
             div.innerHTML = `
                 <h3>${chamado.cliente_nome} - ${chamado.tipo_chamado}</h3>
                 <p>Prioridade: ${chamado.prioridade.join(',')}</p>
                 <p>Tempo estimado: ${chamado.tempo_estimado}</p>
                 <p>Agente: ${chamado.agente_atribuido || 'Não atribuído'}</p>
             `;
+            // Define o conteúdo HTML da <div> criada, exibindo informações do chamado:
+            // - Nome do cliente
+            // - Tipo de chamado
+            // - Prioridade (em lista)
+            // - Tempo estimado
+            // - Agente atribuído (ou 'Não atribuído' se for null/undefined)
+            
             filaDiv.appendChild(div);
+            // Insere a <div> do chamado dentro do elemento 'fila' no HTML.
         });
         
         // Atualizar agentes
