@@ -24,7 +24,7 @@ from flask_sse import sse # Notificações em tempo real. Atualizações ao vivo
 from flask_socketio import SocketIO, emit # Permite a comunicação bidirecional em tempo real entre cliente e servidor.
 
 from plyer import notification # Enviar notificações de tarefas concluídas, alertas ou lembretes. Integrar notificações
-# em aplicações desktop ou móve
+# em aplicações desktop ou móveis.
 ###################################################################################################
 # Criar a aplicação web e permitir comunicação em tempo real.
 ###################################################################################################
