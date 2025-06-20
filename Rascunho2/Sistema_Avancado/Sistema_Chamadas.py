@@ -1,15 +1,30 @@
 # Sistema de gerenciamento de chamados de suporte técnico com priorização automática, notificações e interface web.
-import heapq
-import time
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict
-from enum import Enum
-from flask import Flask, request, jsonify, render_template
-from flask_sse import sse
-from flask_socketio import SocketIO, emit
-from plyer import notification
 
+import heapq # Permite manipular listas de modo que elas possam ser usadas como filas de prioridade, onde o menor 
+# elemento sempre fica na frente.
+
+import time # Medir o tempo de execução de blocos de código. Implementar atrasos ou intervalos. Obter timestamps para 
+# logs ou armazenamento.
+
+from datetime import datetime, timedelta # Gerenciamento de tempo e datas
+from dataclasses import dataclass, field # Definir estruturas de dados simples de forma clara e concisa.
+# Melhorar a legibilidade e manutenção do código.
+
+from typing import Optional, List, Dict # Documentar tipos de variáveis e funções. Melhorar a clareza do código e 
+# suporte a ferramentas de análise.
+
+from enum import Enum # Representar estados ou opções fixas de forma clara. Garantir que variáveis assumam apenas 
+# valores definidos.
+
+from flask import Flask, request, jsonify, render_template # Desenvolvimento web e comunicação em tempo real.
+# Criar rotas que respondem a requisições HTTP. Desenvolver APIs RESTful. Servir páginas HTML dinâmicas.
+
+from flask_sse import sse # Notificações em tempo real. Atualizações ao vivo em dashboards ou aplicações web.
+
+from flask_socketio import SocketIO, emit # Permite a comunicação bidirecional em tempo real entre cliente e servidor.
+
+from plyer import notification # Enviar notificações de tarefas concluídas, alertas ou lembretes. Integrar notificações
+# em aplicações desktop ou móve
 ###################################################################################################
 # Criar a aplicação web e permitir comunicação em tempo real.
 ###################################################################################################
