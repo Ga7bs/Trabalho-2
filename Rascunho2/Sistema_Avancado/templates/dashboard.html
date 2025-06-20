@@ -1,0 +1,430 @@
+<!-- ########################################################################################################--> 
+<!-- O frontend do sistema de chamados. Este frontend é 100% dinâmico, atualizando-se automaticamente sempre que o 
+ servidor envia novas informações via WebSocket.-->
+ <!-- ########################################################################################################-->
+
+ <!-- Define a estrutura básica da página e carrega as dependências: Socket.IO: Para comunicação em tempo real 
+  com o servidor e Chart.js: Para gerar gráficos de estatísticas. -->
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Chamados</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Sistema de prioridades: Cores diferentes para cada nível (1 = vermelho/urgente, 4 = verde/baixa).
+        Layout responsivo: Usa CSS Grid (display: grid) para organizar os painéis.
+        Cards: Estilização consistente para chamados e agentes.
+        -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .chamado {
+            border-left: 4px solid;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff;
+            border-radius: 4px;
+        }
+        .priority-1 { border-color: #e74c3c; background-color: #ffdddd; }
+        .priority-2 { border-color: #e67e22; background-color: #ffeedd; }
+        .priority-3 { border-color: #f1c40f; background-color: #fff9dd; }
+        .priority-4 { border-color: #2ecc71; background-color: #ddffdd; }
+        .agente {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f0f8ff;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .btn-urgente {
+            background-color: #e74c3c;
+            margin-top: 5px;
+        }
+        .btn-urgente:hover {
+            background-color: #c0392b;
+        }
+        .btn-finalizar {
+            background-color: #2ecc71;
+            margin-top: 5px;
+        }
+        .btn-finalizar:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Seções principais: Formulário: Para criar novos chamados.
+         Fila de chamados: Lista ordenada por prioridade. 
+         Agentes: Mostra quem está disponível/ocupado.
+         Chamados ativos: Chamados sendo atendidos no momento.-->
+    <h1>Dashboard de Chamados Técnicos</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Adicionar Novo Chamado</h2>
+            <form id="form-chamado">
+                <div class="form-group">
+                    <label for="cliente_nome">Cliente:</label>
+                    <input type="text" id="cliente_nome" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tipo_cliente">Tipo de Cliente:</label>
+                    <select id="tipo_cliente" required>
+                        <option value="Prioritário">Prioritário</option>
+                        <option value="Sem prioridade">Sem prioridade</option>
+                        <option value="Demonstração">Demonstração</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tipo_chamado">Tipo de Chamado:</label>
+                    <select id="tipo_chamado" required>
+                        <option value="Server down">Server down</option>
+                        <option value="Impacta produção">Impacta produção</option>
+                        <option value="Sem impacto">Sem impacto</option>
+                        <option value="Dúvida">Dúvida</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="descricao">Descrição:</label>
+                    <textarea id="descricao" rows="3" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prioridade_manual">Prioridade Manual (opcional):</label>
+                    <input type="number" id="prioridade_manual" min="1" max="4">
+                </div>
+                
+                <button type="submit">Adicionar Chamado</button>
+            </form>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-chamados">0</div>
+                    <div class="stat-label">Chamados Totais</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="chamados-pendentes">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+            </div>
+            
+            <canvas id="priorityChart" height="200"></canvas>
+        </div>
+        
+        <div class="panel">
+            <h2>Fila de Chamados</h2>
+            <button id="processar-btn">Processar Próximo Chamado</button>
+            <div id="fila-chamados"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Agentes de Suporte</h2>
+            <div id="lista-agentes"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Chamados em Andamento</h2>
+            <div id="chamados-ativos"></div>
+        </div>
+    </div>
+
+    <script>
+        // Conexão com o servidor Socket.IO 
+        // Quando o servidor emite atualizar_fila (via Socket.IO), o frontend atualiza todos os painéis.
+        const socket = io();
+        let priorityChart = null;
+
+        // Função para atualizar estatísticas
+        function atualizarEstatisticas(data) {
+            document.getElementById('total-chamados').textContent = 
+                data.fila.length + data.chamados_em_atendimento.length;
+            document.getElementById('chamados-pendentes').textContent = data.fila.length;
+            
+            // Atualizar gráfico de prioridades
+            const priorities = {
+                'Server down': 0,
+                'Impacta produção': 0,
+                'Sem impacto': 0,
+                'Dúvida': 0
+            };
+            
+            data.fila.forEach(chamado => {
+                priorities[chamado.tipo_chamado]++;
+            });
+            
+            if (priorityChart) {
+                priorityChart.data.datasets[0].data = Object.values(priorities);
+                priorityChart.update();
+            } else { 
+                
+                // Gráfico de Estatísticas. Mostra a distribuição de chamados por tipo.
+                const ctx = document.getElementById('priorityChart').getContext('2d');
+                priorityChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(priorities),
+                        datasets: [{
+                            label: 'Chamados por Prioridade',
+                            data: Object.values(priorities),
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(255, 159, 64, 0.7)',
+                                'rgba(255, 205, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(255, 159, 64)',
+                                'rgb(255, 205, 86)',
+                                'rgb(75, 192, 192)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Função para renderizar a fila de chamados. Cria um elemento HTML para cada chamado na fila, aplica classes 
+        // CSS baseadas na prioridade e adiciona botões para ações como escalonamento.
+        function renderizarFila(fila) {
+            const container = document.getElementById('fila-chamados');
+            container.innerHTML = '';
+            
+            if (fila.length === 0) {
+                container.innerHTML = '<p>Nenhum chamado na fila</p>';
+                return;
+            }
+            
+            fila.forEach(chamado => {
+                const div = document.createElement('div');
+                div.className = `chamado priority-${chamado.prioridade[0]}`;
+                div.innerHTML = `
+                    <h3>${chamado.cliente} - ${chamado.tipo_chamado}</h3>
+                    <p><strong>Prioridade:</strong> ${chamado.prioridade.join('-')}</p>
+                    <p><strong>Tempo Estimado:</strong> ${chamado.tempo_estimado}</p>
+                    <p><strong>Status:</strong> ${chamado.status}</p>
+                    <p><strong>Descrição:</strong> ${chamado.descricao}</p>
+                    <p><small>Criado em: ${chamado.timestamp}</small></p>
+                    <button class="btn-urgente" onclick="escalarChamado('${chamado.id}')">Tornar Urgente</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Função para renderizar agentes
+        function renderizarAgentes(agentes) {
+            const container = document.getElementById('lista-agentes');
+            container.innerHTML = '';
+            
+            agentes.forEach(agente => {
+                const div = document.createElement('div');
+                div.className = 'agente';
+                div.innerHTML = `
+                    <h3>${agente.nome}</h3>
+                    <p><strong>Especialidades:</strong> ${agente.especialidades.join(', ')}</p>
+                    <p><strong>Chamado Atual:</strong> ${agente.chamado_atual || 'Nenhum'}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Função para renderizar chamados ativos
+        function renderizarChamadosAtivos(chamados) {
+            const container = document.getElementById('chamados-ativos');
+            container.innerHTML = '';
+            
+            if (chamados.length === 0) {
+                container.innerHTML = '<p>Nenhum chamado em andamento</p>';
+                return;
+            }
+            
+            chamados.forEach(chamado => {
+                const div = document.createElement('div');
+                div.className = `chamado priority-${chamado.prioridade[0]}`;
+                div.innerHTML = `
+                    <h3>${chamado.cliente} - ${chamado.tipo_chamado}</h3>
+                    <p><strong>Atendido por:</strong> ${getNomeAgente(chamado.agente)}</p>
+                    <p><strong>Tempo Estimado:</strong> ${chamado.tempo_estimado}</p>
+                    <p><strong>Status:</strong> ${chamado.status}</p>
+                    <p><strong>Descrição:</strong> ${chamado.descricao}</p>
+                    <button class="btn-finalizar" onclick="finalizarChamado('${chamado.id}')">
+                        Finalizar Atendimento
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Função auxiliar para obter nome do agente
+        function getNomeAgente(idAgente) {
+            if (!idAgente) return 'N/D';
+            const agente = agentes.find(a => a.id === idAgente);
+            return agente ? agente.nome : 'N/D';
+        }
+
+        // Formulário de Novo Chamado. Event listener para o formulário
+        document.getElementById('form-chamado').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const novoChamado = {
+                cliente_nome: document.getElementById('cliente_nome').value,
+                tipo_cliente: document.getElementById('tipo_cliente').value,
+                tipo_chamado: document.getElementById('tipo_chamado').value,
+                descricao: document.getElementById('descricao').value,
+                prioridade_manual: document.getElementById('prioridade_manual').value || undefined
+            };
+            
+            socket.emit('novo_chamado', novoChamado);
+            
+            // Limpar o formulário
+            this.reset();
+        });
+
+        // Processamento de Chamados. Event listener para processar próximo chamado.
+        // Chama a API para processar o próximo chamado da fila.
+        document.getElementById('processar-btn').addEventListener('click', function() {
+            fetch('/api/chamados/proximo', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.erro) {
+                        alert(data.erro);
+                    }
+                });
+        });
+
+        // Variáveis globais para armazenar dados
+        let agentes = [];
+        let chamadosEmAtendimento = [];
+
+        // Função global para escalar chamados. Escalonar um chamado.
+        window.escalarChamado = function(id) {
+            socket.emit('escalar_chamado', {
+                id_chamado: id,
+                prioridade: 1  // Prioridade máxima
+            });
+        };
+
+        // Função global para finalizar chamados. Finalizar um chamado.
+        window.finalizarChamado = function(id) {
+            socket.emit('finalizar_chamado', {
+                id_chamado: id
+            });
+        };
+
+        // Ouvinte para atualizações do servidor
+        socket.on('atualizar_fila', function(data) {
+            agentes = data.agentes;
+            chamadosEmAtendimento = data.chamados_em_atendimento;
+            
+            renderizarFila(data.fila);
+            renderizarAgentes(data.agentes);
+            renderizarChamadosAtivos(data.chamados_em_atendimento);
+            atualizarEstatisticas({ 
+                fila: data.fila,
+                chamados_em_atendimento: data.chamados_em_atendimento,
+                agentes: data.agentes
+            });
+        });
+
+        // Carregar dados iniciais
+        fetch('/api/chamados')
+            .then(response => response.json())
+            .then(data => {
+                agentes = data.agentes;
+                chamadosEmAtendimento = data.chamados_em_atendimento || [];
+                
+                renderizarFila(data.fila);
+                renderizarAgentes(data.agentes);
+                renderizarChamadosAtivos(chamadosEmAtendimento);
+                atualizarEstatisticas({ 
+                    fila: data.fila,
+                    chamados_em_atendimento: chamadosEmAtendimento,
+                    agentes: data.agentes
+                });
+            });
+    </script>
+</body>
+</html>
