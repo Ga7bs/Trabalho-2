@@ -38,3 +38,27 @@ Abra seu navegador e acesse:
 - [Flask-SSE](https://flask-sse.readthedocs.io/)
 - [Redis](https://redis.io/)
 - [Plyer](https://github.com/kivy/plyer)
+
+---
+
+# Análise de Complexidade e Escalabilidade:
+## ⚙️ Operações Principais
+
+- `adicionar_chamado()`: O(log n) — devido ao uso de `heapq.heappush`
+- `processar_proximo_chamado()`: O(log n) — devido ao uso de `heapq.heappop`
+
+
+## 🔄 Comparação com Alternativas
+
+### Lista não ordenada
+- Inserção: O(1)
+- Remoção: O(n) — é necessário buscar o item mais prioritário manualmente
+
+### Lista ordenada
+- Inserção: O(n) — para manter a ordenação
+- Remoção: O(1) — sempre remove o primeiro item (de maior prioridade)
+
+
+Notificações são disparadas automaticamente para:
+    'Server down' (prioridade 1)
+    'Impacta produção' (prioridade 2)
