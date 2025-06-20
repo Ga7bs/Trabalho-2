@@ -1,23 +1,40 @@
- --- Como executar o projeto ---
+# Sistema de Chamadas
 
--- Dependências -- 
+Uma aplicação web simples para gerenciamento de chamadas, utilizando Flask e Socket.IO.
 
-Instale as dependências necessárias com o pip:
+## 🚀 Como executar o projeto
 
-  pip install flask flask-sse flask-socketio plyer redis
+### 📦 Dependências
 
-Caso o Redis não seja necessário para sua execução local, você pode usar:
+Instale as dependências necessárias com o `pip`:
 
-  pip install flask flask-socketio flask-sse plyer
+```bash
+pip install flask flask-sse flask-socketio plyer redis
+```
 
- -- Executando a aplicação --
+Caso o Redis não seja necessário para sua execução local, utilize:
 
- -- Execute o script principal --
-  
-  python Sistema_Chamadas.py
+```bash
+pip install flask flask-socketio flask-sse plyer
+```
 
- -- Acessando o Dashboard --
+### ▶️ Executando a aplicação
+
+Execute o script principal:
+
+```bash
+python Sistema_Chamadas.py
+```
+### 🌐 Acessando o Dashboard
 
 Abra seu navegador e acesse:
 
-http://localhost:5000
+[http://localhost:5000](http://localhost:5000)
+
+## 🛠️ Tecnologias Utilizadas
+
+- [Flask](https://flask.palletsprojects.com/)
+- [Flask-SocketIO](https://flask-socketio.readthedocs.io/)
+- [Flask-SSE](https://flask-sse.readthedocs.io/)
+- [Redis](https://redis.io/)
+- [Plyer](https://github.com/kivy/plyer)
